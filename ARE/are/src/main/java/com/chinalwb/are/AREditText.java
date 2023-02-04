@@ -1,13 +1,17 @@
 package com.chinalwb.are;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
+
 import androidx.appcompat.widget.AppCompatEditText;
+
 import android.text.Editable;
+import android.text.Layout;
 import android.text.Selection;
 import android.text.Spannable;
 import android.text.Spanned;
@@ -35,6 +39,8 @@ import com.chinalwb.are.spans.AreUnderlineSpan;
 import com.chinalwb.are.strategies.AtStrategy;
 import com.chinalwb.are.strategies.ImageStrategy;
 import com.chinalwb.are.strategies.VideoStrategy;
+import com.chinalwb.are.styles.ARE_AlignmentStyle;
+import com.chinalwb.are.styles.ARE_BoldStyle;
 import com.chinalwb.are.styles.ARE_Helper;
 import com.chinalwb.are.styles.IARE_Style;
 import com.chinalwb.are.styles.toolbar.ARE_Toolbar;
@@ -48,68 +54,80 @@ import java.util.List;
  * All Rights Reserved.
  *
  * @author Wenbin Liu
- *
  */
 public class AREditText extends AppCompatEditText {
 
-	private IARE_Toolbar mToolbar;
+    private IARE_Toolbar mToolbar;
 
-	private static boolean LOG = false;
+    private static boolean LOG = false;
 
-	private static boolean MONITORING = true;
+    private static boolean MONITORING = true;
 
-	private ARE_Toolbar mFixedToolbar;
+    private ARE_Toolbar mFixedToolbar;
 
-	private List<IARE_Style> mToolbarStylesList = new ArrayList<>();
+    private List<IARE_Style> mToolbarStylesList = new ArrayList<>();
 
-	private Context mContext;
+    private Context mContext;
 
-	private TextWatcher mTextWatcher;
+    private TextWatcher mTextWatcher;
 
-	public AREditText(Context context) {
-		this(context, null);
-	}
 
-	public AREditText(Context context, AttributeSet attrs) {
-		this(context, attrs, 0);
-	}
+    private List<IARE_Style> mStyleList = new ArrayList<>();
 
-	public AREditText(Context context, AttributeSet attrs, int defStyleAttr) {
-		super(context, attrs, defStyleAttr);
-		mContext = context;
-		initGlobalValues();
-		init();
-		setupListener();
-	}
+    private ARE_BoldStyle areBoldStyle;
+    private ARE_AlignmentStyle areAlignmentStyle;
 
-	private void initGlobalValues() {
-		int[] wh = Util.getScreenWidthAndHeight(mContext);
-		Constants.SCREEN_WIDTH = wh[0];
-		Constants.SCREEN_HEIGHT = wh[1];
-	}
+    public AREditText(Context context) {
+        this(context, null);
+    }
 
-	private void init() {
-		useSoftwareLayerOnAndroid8();
+    public AREditText(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    public AREditText(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        mContext = context;
+        initGlobalValues();
+        init();
+        setupListener();
+    }
+
+    private void initGlobalValues() {
+        int[] wh = Util.getScreenWidthAndHeight(mContext);
+        Constants.SCREEN_WIDTH = wh[0];
+        Constants.SCREEN_HEIGHT = wh[1];
+    }
+
+    private void init() {
+        areBoldStyle = new ARE_BoldStyle(getContext(), this);
+        areAlignmentStyle = new ARE_AlignmentStyle(getContext(), this);
+
+//        mStyleList.add(areBoldStyle);
+        mStyleList.add(areAlignmentStyle);
+
+
+        useSoftwareLayerOnAndroid8();
         // this.setMovementMethod(new AREMovementMethod());
-		this.setFocusableInTouchMode(true);
-		this.setBackgroundColor(Color.WHITE);
+        this.setFocusableInTouchMode(true);
+        this.setBackgroundColor(Color.WHITE);
 //		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
 //			this.setInputType(EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE
 //					| EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 //		} else {
-			this.setInputType(EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE
-					| EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        this.setInputType(EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE
+                | EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 //		}
-		int padding = 8;
-		padding = Util.getPixelByDp(mContext, padding);
-		this.setPadding(padding, padding, padding, padding);
-		this.setTextSize(TypedValue.COMPLEX_UNIT_SP, Constants.DEFAULT_FONT_SIZE);
-	}
+        int padding = 8;
+        padding = Util.getPixelByDp(mContext, padding);
+        this.setPadding(padding, padding, padding, padding);
+        this.setTextSize(TypedValue.COMPLEX_UNIT_SP, Constants.DEFAULT_FONT_SIZE);
+    }
 
-	private void paste(ClipData clip) {
-	    Editable mText = this.getEditableText();
-	    int min = 0;
-	    int max = mText.length();
+    private void paste(ClipData clip) {
+        Editable mText = this.getEditableText();
+        int min = 0;
+        int max = mText.length();
         if (clip != null) {
             boolean didFirst = false;
             for (int i = 0; i < clip.getItemCount(); i++) {
@@ -153,83 +171,83 @@ public class AREditText extends AppCompatEditText {
     }
 
     @Override
-	public boolean onTouchEvent(MotionEvent event) {
-		int off = AREMovementMethod.getTextOffset(this, this.getEditableText(), event);
-		ARE_Clickable_Span[] clickableSpans = this.getText().getSpans(off, off, ARE_Clickable_Span.class);
-		if (clickableSpans.length == 1 && clickableSpans[0] instanceof AreImageSpan) {
-			return true;
-		}
+    public boolean onTouchEvent(MotionEvent event) {
+        int off = AREMovementMethod.getTextOffset(this, this.getEditableText(), event);
+        ARE_Clickable_Span[] clickableSpans = this.getText().getSpans(off, off, ARE_Clickable_Span.class);
+        if (clickableSpans.length == 1 && clickableSpans[0] instanceof AreImageSpan) {
+            return true;
+        }
 
-		return super.onTouchEvent(event);
-	}
+        return super.onTouchEvent(event);
+    }
 
-	/**
-	 * Sets up listeners for controls.
-	 */
-	private void setupListener() {
-		setupTextWatcher();
-	} // #End of setupListener()
+    /**
+     * Sets up listeners for controls.
+     */
+    private void setupListener() {
+        setupTextWatcher();
+    } // #End of setupListener()
 
-	/**
-	 * Monitoring text changes.
-	 */
-	private void setupTextWatcher() {
-		mTextWatcher = new TextWatcher() {
+    /**
+     * Monitoring text changes.
+     */
+    private void setupTextWatcher() {
+        mTextWatcher = new TextWatcher() {
 
-			int startPos = 0;
-			int endPos = 0;
+            int startPos = 0;
+            int endPos = 0;
 
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-				if (!MONITORING) {
-					return;
-				}
-				if (LOG) {
-					Util.log("beforeTextChanged:: s = " + s + ", start = " + start + ", count = " + count
-							+ ", after = " + after);
-				}
-				// DO NOTHING FOR NOW
-			}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                if (!MONITORING) {
+                    return;
+                }
+                if (LOG) {
+                    Util.log("beforeTextChanged:: s = " + s + ", start = " + start + ", count = " + count
+                            + ", after = " + after);
+                }
+                // DO NOTHING FOR NOW
+            }
 
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				if (!MONITORING) {
-					return;
-				}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!MONITORING) {
+                    return;
+                }
 
-				if (LOG) {
-					Util.log("onTextChanged:: s = " + s + ", start = " + start + ", count = " + count + ", before = "
-							+ before);
-				}
-				this.startPos = start;
-				this.endPos = start + count;
-			}
+                if (LOG) {
+                    Util.log("onTextChanged:: s = " + s + ", start = " + start + ", count = " + count + ", before = "
+                            + before);
+                }
+                this.startPos = start;
+                this.endPos = start + count;
+            }
 
-			@Override
-			public void afterTextChanged(Editable s) {
-				if (!MONITORING) {
-					return;
-				}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!MONITORING) {
+                    return;
+                }
 
-				if (LOG) {
-					Util.log("afterTextChanged:: s = " + s);
-				}
+                if (LOG) {
+                    Util.log("afterTextChanged:: s = " + s);
+                }
 
-				if (endPos <= startPos) {
-					Util.log("User deletes: start == " + startPos + " endPos == " + endPos);
-				}
+                if (endPos <= startPos) {
+                    Util.log("User deletes: start == " + startPos + " endPos == " + endPos);
+                }
 
-				for (IARE_Style style : mToolbarStylesList) {
-					style.applyStyle(s, startPos, endPos);
-				}
-			}
-		};
+                for (IARE_Style style : mStyleList) {
+                    style.applyStyle(s, startPos, endPos);
+                }
+            }
+        };
 
-		this.addTextChangedListener(mTextWatcher);
-	}
+        this.addTextChangedListener(mTextWatcher);
+    }
 
     public void setToolbar(IARE_Toolbar toolbar) {
-	    mToolbarStylesList.clear();
+        mToolbarStylesList.clear();
         this.mToolbar = toolbar;
         this.mToolbar.setEditText(this);
         List<IARE_ToolItem> toolItems = toolbar.getToolItems();
@@ -239,157 +257,159 @@ public class AREditText extends AppCompatEditText {
         }
     }
 
-	/**
-	 * Sets the fixed items toolbar to this EditText.
-	 */
-	public void setFixedToolbar(ARE_Toolbar fixedToolbar) {
-		mFixedToolbar = fixedToolbar;
-		if (mFixedToolbar != null) {
-			mToolbarStylesList = mFixedToolbar.getStylesList();
-		}
-	}
+    /**
+     * Sets the fixed items toolbar to this EditText.
+     */
+    public void setFixedToolbar(ARE_Toolbar fixedToolbar) {
+        mFixedToolbar = fixedToolbar;
+        if (mFixedToolbar != null) {
+            mToolbarStylesList = mFixedToolbar.getStylesList();
+        }
+    }
 
-	@Override
-	public void onSelectionChanged(int selStart, int selEnd) {
-	    if (mToolbar != null) {
-			List<IARE_ToolItem> toolItems = mToolbar.getToolItems();
-			for (IARE_ToolItem toolItem : toolItems) {
-				toolItem.onSelectionChanged(selStart, selEnd);
-			}
-	        return;
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onSelectionChanged(int selStart, int selEnd) {
+//        super.onSelectionChanged(selStart, selEnd);
+        if (mToolbar != null) {
+            List<IARE_ToolItem> toolItems = mToolbar.getToolItems();
+            for (IARE_ToolItem toolItem : toolItems) {
+                toolItem.onSelectionChanged(selStart, selEnd);
+            }
+            return;
         }
 
-		if (mFixedToolbar == null) {
-			return;
-		}
+        if (mFixedToolbar == null) {
+            return;
+        }
 
-		boolean boldExists = false;
-		boolean italicsExists = false;
-		boolean underlinedExists = false;
-		boolean strikethroughExists = false;
-		boolean subscriptExists = false;
-		boolean superscriptExists = false;
-		boolean backgroundColorExists = false;
-		boolean quoteExists = false;
+        boolean boldExists = false;
+        boolean italicsExists = false;
+        boolean underlinedExists = false;
+        boolean strikethroughExists = false;
+        boolean subscriptExists = false;
+        boolean superscriptExists = false;
+        boolean backgroundColorExists = false;
+        boolean quoteExists = false;
 
-		//
-		// Two cases:
-		// 1. Selection is just a pure cursor
-		// 2. Selection is a range
-		Editable editable = this.getEditableText();
-		if (selStart > 0 && selStart == selEnd) {
-			CharacterStyle[] styleSpans = editable.getSpans(selStart - 1, selStart, CharacterStyle.class);
+        //
+        // Two cases:
+        // 1. Selection is just a pure cursor
+        // 2. Selection is a range
+        Editable editable = this.getEditableText();
+        if (selStart > 0 && selStart == selEnd) {
+            CharacterStyle[] styleSpans = editable.getSpans(selStart - 1, selStart, CharacterStyle.class);
 
-			for (CharacterStyle styleSpan : styleSpans) {
-				if (styleSpan instanceof StyleSpan) {
-					if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD) {
-						boldExists = true;
-					} else if (((StyleSpan) styleSpan).getStyle() == Typeface.ITALIC) {
-						italicsExists = true;
-					} else if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD_ITALIC) {
-						// TODO
-					}
-				} else if (styleSpan instanceof AreUnderlineSpan) {
-					underlinedExists = true;
-				} else if (styleSpan instanceof StrikethroughSpan) {
-					strikethroughExists = true;
-				} else if (styleSpan instanceof BackgroundColorSpan) {
-					backgroundColorExists = true;
-				}
-			}
+            for (CharacterStyle styleSpan : styleSpans) {
+                if (styleSpan instanceof StyleSpan) {
+                    if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD) {
+                        boldExists = true;
+                    } else if (((StyleSpan) styleSpan).getStyle() == Typeface.ITALIC) {
+                        italicsExists = true;
+                    } else if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD_ITALIC) {
+                        // TODO
+                    }
+                } else if (styleSpan instanceof AreUnderlineSpan) {
+                    underlinedExists = true;
+                } else if (styleSpan instanceof StrikethroughSpan) {
+                    strikethroughExists = true;
+                } else if (styleSpan instanceof BackgroundColorSpan) {
+                    backgroundColorExists = true;
+                }
+            }
 
-			QuoteSpan[] quoteSpans = editable.getSpans(selStart - 1, selStart, QuoteSpan.class);
-			if (quoteSpans != null && quoteSpans.length > 0) {
-				quoteExists = true;
-			}
+            QuoteSpan[] quoteSpans = editable.getSpans(selStart - 1, selStart, QuoteSpan.class);
+            if (quoteSpans != null && quoteSpans.length > 0) {
+                quoteExists = true;
+            }
 
-			AreSubscriptSpan[] subscriptSpans = editable.getSpans(selStart - 1, selStart, AreSubscriptSpan.class);
-			if (subscriptSpans != null && subscriptSpans.length > 0) {
-				subscriptExists = true;
-			}
+            AreSubscriptSpan[] subscriptSpans = editable.getSpans(selStart - 1, selStart, AreSubscriptSpan.class);
+            if (subscriptSpans != null && subscriptSpans.length > 0) {
+                subscriptExists = true;
+            }
 
-			AreSuperscriptSpan[] superscriptSpans = editable.getSpans(selStart - 1, selStart, AreSuperscriptSpan.class);
-			if (superscriptSpans != null && superscriptSpans.length > 0) {
-				superscriptExists = true;
-			}
-		} else {
-			//
-			// Selection is a range
-			CharacterStyle[] styleSpans = editable.getSpans(selStart, selEnd, CharacterStyle.class);
+            AreSuperscriptSpan[] superscriptSpans = editable.getSpans(selStart - 1, selStart, AreSuperscriptSpan.class);
+            if (superscriptSpans != null && superscriptSpans.length > 0) {
+                superscriptExists = true;
+            }
+        } else {
+            //
+            // Selection is a range
+            CharacterStyle[] styleSpans = editable.getSpans(selStart, selEnd, CharacterStyle.class);
 
-			for (CharacterStyle styleSpan : styleSpans) {
-				if (styleSpan instanceof StyleSpan) {
-					if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD) {
-						if (editable.getSpanStart(styleSpan) <= selStart
-								&& editable.getSpanEnd(styleSpan) >= selEnd) {
-							boldExists = true;
-						}
-					} else if (((StyleSpan) styleSpan).getStyle() == Typeface.ITALIC) {
-						if (editable.getSpanStart(styleSpan) <= selStart
-								&& editable.getSpanEnd(styleSpan) >= selEnd) {
-							italicsExists = true;
-						}
-					} else if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD_ITALIC) {
-						if (editable.getSpanStart(styleSpan) <= selStart
-								&& editable.getSpanEnd(styleSpan) >= selEnd) {
-							italicsExists = true;
-							boldExists = true;
-						}
-					}
-				} else if (styleSpan instanceof AreUnderlineSpan) {
-					if (editable.getSpanStart(styleSpan) <= selStart
-							&& editable.getSpanEnd(styleSpan) >= selEnd) {
-						underlinedExists = true;
-					}
-				} else if (styleSpan instanceof StrikethroughSpan) {
-					if (editable.getSpanStart(styleSpan) <= selStart
-							&& editable.getSpanEnd(styleSpan) >= selEnd) {
-						strikethroughExists = true;
-					}
-				} else if (styleSpan instanceof BackgroundColorSpan) {
-					if (editable.getSpanStart(styleSpan) <= selStart
-							&& editable.getSpanEnd(styleSpan) >= selEnd) {
-						backgroundColorExists = true;
-					}
-				}
-			}
-		}
+            for (CharacterStyle styleSpan : styleSpans) {
+                if (styleSpan instanceof StyleSpan) {
+                    if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD) {
+                        if (editable.getSpanStart(styleSpan) <= selStart
+                                && editable.getSpanEnd(styleSpan) >= selEnd) {
+                            boldExists = true;
+                        }
+                    } else if (((StyleSpan) styleSpan).getStyle() == Typeface.ITALIC) {
+                        if (editable.getSpanStart(styleSpan) <= selStart
+                                && editable.getSpanEnd(styleSpan) >= selEnd) {
+                            italicsExists = true;
+                        }
+                    } else if (((StyleSpan) styleSpan).getStyle() == Typeface.BOLD_ITALIC) {
+                        if (editable.getSpanStart(styleSpan) <= selStart
+                                && editable.getSpanEnd(styleSpan) >= selEnd) {
+                            italicsExists = true;
+                            boldExists = true;
+                        }
+                    }
+                } else if (styleSpan instanceof AreUnderlineSpan) {
+                    if (editable.getSpanStart(styleSpan) <= selStart
+                            && editable.getSpanEnd(styleSpan) >= selEnd) {
+                        underlinedExists = true;
+                    }
+                } else if (styleSpan instanceof StrikethroughSpan) {
+                    if (editable.getSpanStart(styleSpan) <= selStart
+                            && editable.getSpanEnd(styleSpan) >= selEnd) {
+                        strikethroughExists = true;
+                    }
+                } else if (styleSpan instanceof BackgroundColorSpan) {
+                    if (editable.getSpanStart(styleSpan) <= selStart
+                            && editable.getSpanEnd(styleSpan) >= selEnd) {
+                        backgroundColorExists = true;
+                    }
+                }
+            }
+        }
 
-		QuoteSpan[] quoteSpans = editable.getSpans(selStart, selEnd, QuoteSpan.class);
-		if (quoteSpans != null && quoteSpans.length > 0) {
-			if (editable.getSpanStart(quoteSpans[0]) <= selStart
-					&& editable.getSpanEnd(quoteSpans[0]) >= selEnd) {
-				quoteExists = true;
-			}
-		}
+        QuoteSpan[] quoteSpans = editable.getSpans(selStart, selEnd, QuoteSpan.class);
+        if (quoteSpans != null && quoteSpans.length > 0) {
+            if (editable.getSpanStart(quoteSpans[0]) <= selStart
+                    && editable.getSpanEnd(quoteSpans[0]) >= selEnd) {
+                quoteExists = true;
+            }
+        }
 
-		AreSubscriptSpan[] subscriptSpans = editable.getSpans(selStart, selEnd, AreSubscriptSpan.class);
-		if (subscriptSpans != null && subscriptSpans.length > 0) {
-			if (editable.getSpanStart(subscriptSpans[0]) <= selStart
-					&& editable.getSpanEnd(subscriptSpans[0]) >= selEnd) {
-				subscriptExists = true;
-			}
-		}
+        AreSubscriptSpan[] subscriptSpans = editable.getSpans(selStart, selEnd, AreSubscriptSpan.class);
+        if (subscriptSpans != null && subscriptSpans.length > 0) {
+            if (editable.getSpanStart(subscriptSpans[0]) <= selStart
+                    && editable.getSpanEnd(subscriptSpans[0]) >= selEnd) {
+                subscriptExists = true;
+            }
+        }
 
-		AreSuperscriptSpan[] superscriptSpans = editable.getSpans(selStart, selEnd, AreSuperscriptSpan.class);
-		if (superscriptSpans != null && superscriptSpans.length > 0) {
-			if (editable.getSpanStart(superscriptSpans[0]) <= selStart
-					&& editable.getSpanEnd(superscriptSpans[0]) >= selEnd) {
-				superscriptExists = true;
-			}
-		}
+        AreSuperscriptSpan[] superscriptSpans = editable.getSpans(selStart, selEnd, AreSuperscriptSpan.class);
+        if (superscriptSpans != null && superscriptSpans.length > 0) {
+            if (editable.getSpanStart(superscriptSpans[0]) <= selStart
+                    && editable.getSpanEnd(superscriptSpans[0]) >= selEnd) {
+                superscriptExists = true;
+            }
+        }
 
-		//
-		// Set style checked status
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getBoldStyle(), boldExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getItalicStyle(), italicsExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getUnderlineStyle(), underlinedExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getStrikethroughStyle(), strikethroughExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getSubscriptStyle(), subscriptExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getSuperscriptStyle(), superscriptExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getBackgroundColoStyle(), backgroundColorExists);
-		ARE_Helper.updateCheckStatus(mFixedToolbar.getQuoteStyle(), quoteExists);
-	} // #End of method:: onSelectionChanged
+        //
+        // Set style checked status
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getBoldStyle(), boldExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getItalicStyle(), italicsExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getUnderlineStyle(), underlinedExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getStrikethroughStyle(), strikethroughExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getSubscriptStyle(), subscriptExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getSuperscriptStyle(), superscriptExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getBackgroundColoStyle(), backgroundColorExists);
+        ARE_Helper.updateCheckStatus(mFixedToolbar.getQuoteStyle(), quoteExists);
+    } // #End of method:: onSelectionChanged
 
     /**
      * Sets html content to EditText.
@@ -407,49 +427,90 @@ public class AREditText extends AppCompatEditText {
         startMonitor();
     }
 
-	public String getHtml() {
-		StringBuffer html = new StringBuffer();
-		html.append("<html><body>");
-		String editTextHtml = Html.toHtml(getEditableText(), Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL);
-		html.append(editTextHtml);
-		html.append("</body></html>");
-		String htmlContent = html.toString().replaceAll(Constants.ZERO_WIDTH_SPACE_STR_ESCAPE, "");
-		System.out.println(htmlContent);
-		return htmlContent;
-	}
+    public String getHtml() {
+        StringBuffer html = new StringBuffer();
+        html.append("<html><body>");
+        String editTextHtml = Html.toHtml(getEditableText(), Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL);
+        html.append(editTextHtml);
+        html.append("</body></html>");
+        String htmlContent = html.toString().replaceAll(Constants.ZERO_WIDTH_SPACE_STR_ESCAPE, "");
+        System.out.println(htmlContent);
+        return htmlContent;
+    }
 
-	/**
-	 * Needs this because of this bug in Android O:
-	 * https://issuetracker.google.com/issues/67102093
-	 */
-	public void useSoftwareLayerOnAndroid8() {
-		if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
-			this.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-		}
-	}
+    /**
+     * Needs this because of this bug in Android O:
+     * https://issuetracker.google.com/issues/67102093
+     */
+    public void useSoftwareLayerOnAndroid8() {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
+            this.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+    }
 
-	public static void startMonitor() {
-		MONITORING = true;
-	}
+    public static void startMonitor() {
+        MONITORING = true;
+    }
 
-	public static void stopMonitor() {
-		MONITORING = false;
-	}
-	/* ----------------------
-	 * Customization part
-	 * ---------------------- */
+    public static void stopMonitor() {
+        MONITORING = false;
+    }
+    /* ----------------------
+     * Customization part
+     * ---------------------- */
 
-	private AtStrategy mAtStrategy;
-	public void setAtStrategy(AtStrategy atStrategy) { mAtStrategy = atStrategy; }
-	public AtStrategy getAtStrategy() { return mAtStrategy; }
+    private AtStrategy mAtStrategy;
 
-	// VideoStrategy
-	private VideoStrategy mVideoStrategy;
-	public void setVideoStrategy(VideoStrategy videoStrategy) { mVideoStrategy = videoStrategy; }
-	public VideoStrategy getVideoStrategy() { return mVideoStrategy; }
+    public void setAtStrategy(AtStrategy atStrategy) {
+        mAtStrategy = atStrategy;
+    }
 
-	// ImageStrategy
-	private ImageStrategy mImageStrategy;
-	public void setImageStrategy(ImageStrategy imageStrategy) { mImageStrategy = imageStrategy; }
-	public ImageStrategy getImageStrategy() { return mImageStrategy; }
+    public AtStrategy getAtStrategy() {
+        return mAtStrategy;
+    }
+
+    // VideoStrategy
+    private VideoStrategy mVideoStrategy;
+
+    public void setVideoStrategy(VideoStrategy videoStrategy) {
+        mVideoStrategy = videoStrategy;
+    }
+
+    public VideoStrategy getVideoStrategy() {
+        return mVideoStrategy;
+    }
+
+    // ImageStrategy
+    private ImageStrategy mImageStrategy;
+
+    public void setImageStrategy(ImageStrategy imageStrategy) {
+        mImageStrategy = imageStrategy;
+    }
+
+    public ImageStrategy getImageStrategy() {
+        return mImageStrategy;
+    }
+
+
+    // Toolbar解耦
+
+    public void bold() {
+        areBoldStyle.bold();
+    }
+
+    public void boldAll() {
+        areBoldStyle.boldAll();
+    }
+
+    public void alignmentLeft() {
+        areAlignmentStyle.alignLeft();
+    }
+
+    public void alignmentCenter() {
+        areAlignmentStyle.alignCenter();
+    }
+
+    public void alignmentRight() {
+        areAlignmentStyle.alignWholeTextRight();
+    }
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".TestRemoveToolbarActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <com.chinalwb.are.AREditText
+            android:id="@+id/arEditText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnBold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="加粗" />
+
+            <Button
+                android:id="@+id/btnBoldAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="整体加粗" />
+
+            <Button
+                android:id="@+id/btnAlignmentLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="居左" />
+
+            <Button
+                android:id="@+id/btnAlignmentCenter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="居中" />
+
+            <Button
+                android:id="@+id/btnAlignmentRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="居右" />
+
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</LinearLayout>
