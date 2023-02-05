@@ -69,8 +69,8 @@ public class ARE_BoldStyle extends ARE_ABS_Style<AreBoldSpan> {
         if (handleWholeText){
             selectionStart = 0;
             selectionEnd = mEditText.getEditableText().length();
-            handleWholeText = false;
         }
+        handleWholeText = false;
         return !containStyle(selectionStart, selectionEnd);
     }
 

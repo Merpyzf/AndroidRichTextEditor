@@ -2,6 +2,7 @@ package com.chinalwb.are.demo;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +18,8 @@ public class TestRemoveToolbarActivity extends AppCompatActivity {
     private Button btnAlignmentLeft;
     private Button btnAlignmentCenter;
     private Button btnAlignmentRight;
+    private Button btnSetColor;
+    private Button btnSetAllColor;
     private Button btnSave;
 
     @Override
@@ -29,6 +32,9 @@ public class TestRemoveToolbarActivity extends AppCompatActivity {
         btnAlignmentLeft = findViewById(R.id.btnAlignmentLeft);
         btnAlignmentCenter = findViewById(R.id.btnAlignmentCenter);
         btnAlignmentRight = findViewById(R.id.btnAlignmentRight);
+        btnSetColor = findViewById(R.id.btnSetColor);
+        btnSetAllColor = findViewById(R.id.btnSetAllColor);
+
         btnSave = findViewById(R.id.btnSave);
 
 
@@ -69,6 +75,18 @@ public class TestRemoveToolbarActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 arEditText.alignmentRight();
+            }
+        });
+        btnSetColor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                arEditText.color(Color.RED);
+            }
+        });
+        btnSetAllColor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                arEditText.colorAll(Color.GREEN);
             }
         });
     }

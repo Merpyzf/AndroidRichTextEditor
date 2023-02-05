@@ -57,6 +57,18 @@
                 android:text="居右" />
 
             <Button
+                android:id="@+id/btnSetColor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="颜色(RED)" />
+
+            <Button
+                android:id="@+id/btnSetAllColor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="整体颜色(GREEN)" />
+
+            <Button
                 android:id="@+id/btnSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
