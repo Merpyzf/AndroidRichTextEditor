@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 
@@ -34,15 +35,12 @@ public class TestRemoveToolbarActivity extends AppCompatActivity {
         btnAlignmentRight = findViewById(R.id.btnAlignmentRight);
         btnSetColor = findViewById(R.id.btnSetColor);
         btnSetAllColor = findViewById(R.id.btnSetAllColor);
-
         btnSave = findViewById(R.id.btnSave);
-
-
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String html = arEditText.getHtml();
-                arEditText.setText(arEditText.getEditableText().subSequence(0,5));
+                arEditText.setText(arEditText.getEditableText().subSequence(0, 5));
                 Log.i("wk", "保存结果：");
                 Log.i("wk", html);
             }

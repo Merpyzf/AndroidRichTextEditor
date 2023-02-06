@@ -79,6 +79,8 @@ public class AREditText extends AppCompatEditText {
     private ARE_AlignmentStyle areAlignmentStyle;
     private ARE_FontColorStyle areFontColorStyle;
 
+    private OnSelectionChangedListener onSelectionChangedListener;
+
     public AREditText(Context context) {
         this(context, null);
     }
@@ -102,16 +104,11 @@ public class AREditText extends AppCompatEditText {
     }
 
     private void init() {
-        setText("任天堂花了很长时间才制造出红白机的替代品。它从来不是一家走在技术创新前沿的公司，而是选择追随横井军平创立的道路——他称其为“用现代技术进行横向思考”的设计理念，通俗地说，就是任天堂在开发新产品时，始终坚持使用廉价且已经过验证的现成组件，从不拿巨额资金去冒险开发尖端的新组件。这种思维模式在横井军平设计的经典产品中都有所体现，它似乎与大多数科技公司突破常规的态度大不相同，像是某种倒退。");
-
         areBoldStyle = new ARE_BoldStyle(getContext(), this);
         areAlignmentStyle = new ARE_AlignmentStyle(getContext(), this);
         areFontColorStyle = new ARE_FontColorStyle(getContext(), this);
-
 //        mStyleList.add(areBoldStyle);
         mStyleList.add(areAlignmentStyle);
-
-
         useSoftwareLayerOnAndroid8();
         // this.setMovementMethod(new AREMovementMethod());
         this.setFocusableInTouchMode(true);
@@ -276,6 +273,9 @@ public class AREditText extends AppCompatEditText {
     @Override
     public void onSelectionChanged(int selStart, int selEnd) {
 //        super.onSelectionChanged(selStart, selEnd);
+        if (onSelectionChangedListener != null) {
+            onSelectionChangedListener.onSelectionChanged(this, selStart, selEnd);
+        }
         if (mToolbar != null) {
             List<IARE_ToolItem> toolItems = mToolbar.getToolItems();
             for (IARE_ToolItem toolItem : toolItems) {
@@ -496,9 +496,7 @@ public class AREditText extends AppCompatEditText {
         return mImageStrategy;
     }
 
-
-    // Toolbar解耦
-
+    // 富文本文字样式设置
     public void bold() {
         areBoldStyle.bold();
     }
@@ -523,7 +521,15 @@ public class AREditText extends AppCompatEditText {
         areFontColorStyle.color(color);
     }
 
-    public void colorAll(int color){
+    public void colorAll(int color) {
         setTextColor(color);
+    }
+
+    public void setOnSelectionChangedListener(OnSelectionChangedListener onSelectionChangedListener) {
+        this.onSelectionChangedListener = onSelectionChangedListener;
+    }
+
+    interface OnSelectionChangedListener {
+        void onSelectionChanged(AREditText editText, int selectionStart, int selectionEnd);
     }
 }
